@@ -1,0 +1,3 @@
+ERROR:
+  DOCKER:
+    HOST_NOT_FOUND: "docker host not found,please check config"

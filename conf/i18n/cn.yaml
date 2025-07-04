@@ -1,0 +1,3 @@
+ERROR:
+  DOCKER:
+    HOST_NOT_FOUND: "docker 主机名未填写请检查配置"
