@@ -19,6 +19,7 @@ type CreateContainOpt struct {
 	Env       []string
 	ImageName string
 	Name      string
+	Labels    map[string]string
 }
 
 // BuildImage 将dockerfile打包为镜像
@@ -62,6 +63,9 @@ func CreateContainer(ctx context.Context, opt *CreateContainOpt) (string, error)
 	}
 	if opt.Env != nil {
 		config.Env = opt.Env
+	}
+	if opt.Labels != nil {
+		config.Labels = opt.Labels
 	}
 	create, err := Client.ContainerCreate(ctx,
 		config,
