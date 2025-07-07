@@ -1,3 +1,6 @@
 ERROR:
   DOCKER:
     HOST_NOT_FOUND: "docker host not found,please check config"
+    CONTAINER_NOT_FOUND: "docker container not found please check input"
+    IMAGE_NOT_FOUND: "docker image not found please check input"
+    INVALID_CONTAINER: "The container content is incorrect"

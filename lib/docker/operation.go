@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
@@ -78,4 +80,29 @@ func CreateContainer(ctx context.Context, opt *CreateContainOpt) (string, error)
 		return "", err
 	}
 	return create.ID, nil
+}
+
+func ListContainerById(ctx context.Context, containerId string) (*container.InspectResponse, error) {
+	inspect, err := Client.ContainerInspect(ctx, containerId)
+	if err != nil {
+		return nil, err
+	}
+	return &inspect, nil
+}
+
+func ListImageByName(ctx context.Context, name string) (*image.InspectResponse, error) {
+	args := filters.Args{}
+	args.Add("reference", name)
+	list, err := Client.ImageList(ctx, image.ListOptions{Filters: args})
+	if err != nil {
+		return nil, err
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	inspect, err := Client.ImageInspect(ctx, list[0].ID)
+	if err != nil {
+		return nil, err
+	}
+	return &inspect, nil
 }

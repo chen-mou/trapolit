@@ -4,13 +4,13 @@ import (
 	"errors"
 	"github.com/docker/docker/client"
 	"sync"
+	"trapolit/lib/conf"
 	"trapolit/lib/i18n"
 )
 
 type Options struct {
-	Host     string `yaml:"host"`
-	Language string `yaml:"language"`
-	Auth     *Auth  `yaml:"auth"`
+	Host string `yaml:"host"`
+	Auth *Auth  `yaml:"auth"`
 }
 
 type Auth struct {
@@ -47,7 +47,7 @@ func toOpts(opt *Options) []client.Opt {
 		res = append(res, client.WithTLSClientConfig(auth.CaCertPath, auth.ClientCertPath, auth.ClientKeyPath))
 	}
 	if opt.Host == "" {
-		panic(errors.New(i18n.Translate(i18n.Lang(opt.Language), "ERROR.DOCKER.HOST_NOT_FOUND")))
+		panic(errors.New(i18n.Translate(conf.Cfg.Language, "ERROR.DOCKER.HOST_NOT_FOUND")))
 	}
 	res = append(res, client.WithHost(opt.Host), client.WithAPIVersionNegotiation())
 	return res
