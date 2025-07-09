@@ -8,4 +8,6 @@ type Process struct {
 type ProcessNode struct {
 	Base
 	ProcessId uint64 `gorm:"column:process_id"`
+	Env       string
+	Image     string
 }

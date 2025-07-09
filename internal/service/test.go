@@ -2,12 +2,16 @@ package service
 
 import (
 	"context"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
+	"os"
+	"sync"
 	"trapolit/internal/entity"
 	"trapolit/lib/conf"
 	"trapolit/lib/docker"
+	"trapolit/lib/i18n"
+	"trapolit/lib/locks"
+	traconf "trapolit/lib/traefik/conf"
 	"trapolit/lib/traefik/operator"
 	"trapolit/lib/utils"
 )
@@ -25,7 +29,8 @@ type Test interface {
 }
 
 type ABTest struct {
-	Operator operator.Operator
+	Builder      operator.Builder
+	OriginConfig *traconf.DynamicConf
 }
 
 // Do
@@ -37,7 +42,7 @@ func (ab *ABTest) Do(ctx context.Context, param *TestParam) error {
 		return err
 	}
 	imageName := param.ImageName + ":" + param.Tag
-	aId, bId, err := ab.funcName(ctx, imageName, port, name)
+	aId, bId, err := ab.createContainer(ctx, imageName, port, name)
 	if err != nil {
 		return err
 	}
@@ -59,15 +64,30 @@ func (ab *ABTest) Do(ctx context.Context, param *TestParam) error {
 		return err
 	}
 	//TODO: 编写把路由写入配置的逻辑
+	confPath := conf.Cfg.Traefik.ConfPath + "/" + param.ImageName + ".yaml"
+	host := conf.Cfg.Urls[conf.Cfg.Env] + "/" + param.ImageName
+	//加锁
+	locks.Lock(param.ImageName)
+	defer locks.UnLock(param.ImageName)
+	oper, err := ab.Builder.NewOperator(confPath)
+	if err != nil {
+		return err
+	}
+	n := imageName + "-ab"
+	oper.AddService(n, []string{aUrl, bUrl})
+	oper.AddRouter(n, host, n)
 }
 
-func (ab *ABTest) funcName(ctx context.Context, imageName string, port nat.PortMap, name string) (string, string, error) {
+func (ab *ABTest) createContainer(ctx context.Context, imageName string, port nat.PortMap, name string) (string, string, error) {
 	aId, err := docker.CreateContainer(ctx, &docker.CreateContainOpt{
 		Ports:     port,
 		Volumes:   nil,
 		Env:       nil,
 		ImageName: imageName,
 		Name:      name + "-a",
+		Labels: map[string]string{
+			"ENV": conf.Cfg.Env,
+		},
 	})
 	if err != nil {
 		return "", "", err
@@ -78,6 +98,9 @@ func (ab *ABTest) funcName(ctx context.Context, imageName string, port nat.PortM
 		Env:       nil,
 		ImageName: imageName,
 		Name:      name + "-b",
+		Labels: map[string]string{
+			"ENV": conf.Cfg.Env,
+		},
 	})
 	if err != nil {
 		return "", "", err
@@ -91,7 +114,7 @@ func (ab *ABTest) findImagePorts(ctx context.Context, param *TestParam) (nat.Por
 		return nil, err
 	}
 	if image == nil {
-		return nil, utils.NewError(conf.Cfg.Language, "ERROR.DOCKER.IMAGE_NOT_FOUND")
+		return nil, utils.NewError(i18n.Lang(conf.Cfg.Language), "ERROR.DOCKER.IMAGE_NOT_FOUND")
 	}
 
 	port := nat.PortMap{}
@@ -122,7 +145,17 @@ func getContainerUrl(container *container.InspectResponse) (string, error) {
 		}
 	}
 	if ip == "" || port == "" {
-		return "", utils.NewError(conf.Cfg.Language, "DOCKER.ERROR.INVALID_CONTAINER")
+		return "", utils.NewError(i18n.Lang(conf.Cfg.Language), "DOCKER.ERROR.INVALID_CONTAINER")
 	}
 	return ip + ":" + port, nil // 没找到
+}
+func checkPath(path string) error {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	if stat.IsDir() {
+		return os.ErrNotExist
+	}
+	return nil
 }

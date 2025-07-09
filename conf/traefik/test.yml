@@ -1,0 +1,25 @@
+http:
+  routers:
+    app1-router:
+      rule: "Host(`app1.example.com`)"
+      service: app1-service
+      entryPoints:
+        - web
+
+    app2-router:
+      rule: "Host(`app2.example.com`)"
+      service: app2-service
+      entryPoints:
+        - web
+
+  services:
+    app1-service:
+      loadBalancer:
+        servers:
+          - url: "http://172.18.0.2:8080"  # app1 容器地址
+          - url: "http://172.18.0.4:8080"  # 可选多个实例
+
+    app2-service:
+      loadBalancer:
+        servers:
+          - url: "http://172.18.0.3:9090"  # app2 容器地址

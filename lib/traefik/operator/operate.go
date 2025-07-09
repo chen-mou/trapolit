@@ -25,9 +25,10 @@ type Router struct {
 // 现在默认提供etcd 与 file两种方式
 type Operator interface {
 	AddProvider()
-	AddService()
-	AddRouter()
+	AddService(name string, targetUrl []string)
+	AddRouter(name, originUrl, serviceName string)
 	DelProvider(name string)
 	DelRouter(name string)
 	DelService(name string)
+	Flush() error // 将修改提交到目标中
 }

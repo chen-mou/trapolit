@@ -2,6 +2,7 @@ package utils
 
 import (
 	"archive/tar"
+	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"path/filepath"
@@ -60,4 +61,41 @@ func TarDirectory(srcPath, tarPath string) error {
 		_, err = io.Copy(tw, f)
 		return err
 	})
+}
+
+func ReadYaml(path string) (map[string]interface{}, error) {
+	byt, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	temp := map[string]interface{}{}
+	err = yaml.Unmarshal(byt, &temp)
+	if err != nil {
+		return nil, err
+	}
+	return toSimpleMap(temp), nil
+}
+
+// toSimpleMap 将多级的Map转换为key为 a.b.c的map
+func toSimpleMap(origin map[string]interface{}) map[string]interface{} {
+	res := map[string]interface{}{}
+	var loop func(prefix string, root map[string]interface{})
+	loop = func(prefix string, root map[string]interface{}) {
+		for k, v := range root {
+			nKey := prefix + "." + k
+			if node, ok := v.(map[string]interface{}); ok {
+				loop(nKey, node)
+			} else {
+				res[nKey] = v
+			}
+		}
+	}
+	for k, v := range origin {
+		if node, ok := v.(map[string]interface{}); ok {
+			loop(k, node)
+		} else {
+			res[k] = v
+		}
+	}
+	return res
 }

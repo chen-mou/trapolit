@@ -4,3 +4,5 @@ ERROR:
     CONTAINER_NOT_FOUND: "docker container not found please check input"
     IMAGE_NOT_FOUND: "docker image not found please check input"
     INVALID_CONTAINER: "The container content is incorrect"
+  COMMON:
+    NOT_FOUND: "not found target"

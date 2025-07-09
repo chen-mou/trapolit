@@ -4,3 +4,5 @@ ERROR:
     CONTAINER_NOT_FOUND: "docker 容器未找到请检查参数"
     IMAGE_NOT_FOUND: "docker 镜像未找到请检查参数"
     INVALID_CONTAINER: "容器内容有误"
+  COMMON:
+    NOT_FOUND: "目标没找到"

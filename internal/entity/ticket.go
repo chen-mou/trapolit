@@ -16,12 +16,12 @@ const (
 	COMPLETE
 )
 
-type TicketEnv uint8
+type TicketEnv string
 
 const (
-	DEV  = iota //开发环境
-	STG         //测试环境
-	PROD        //生产环境
+	DEV  TicketEnv = "dev"  //开发环境
+	STG            = "stg"  //测试环境
+	PROD           = "prod" //生产环境
 )
 
 type Ticket struct {
